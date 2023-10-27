@@ -1,5 +1,6 @@
+# Importa le librerie necessarie
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
@@ -9,32 +10,24 @@ df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\ve
 for feature in df.columns:
     if df[feature].dtype == "object":
         df[feature] = pd.Categorical(df[feature]).codes
-        
+
 # Dividi il dataset in variabili indipendenti (X) e variabile target (y)
 X = df.drop(["Id", "Risk_Flag"], axis=1)
 y = df["Risk_Flag"]
 
+
 # Dividi il dataset in training set e test set
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Definisci la griglia dei parametri per la Grid Search
-param_grid = {'kernel': ['linear', 'rbf', 'poly'],
-              'C': [0.01, 0.1, 1, 10]}
-
-# Crea un oggetto GridSearchCV
-grid_search = GridSearchCV(SVC(), param_grid, cv=5)
-
-# Esegui la Grid Search
-grid_search.fit(X_train, y_train)
-
-# Ottieni il miglior modello trovato
-best_model = grid_search.best_estimator_
+# Crea un modello di Support Vector Machine
+# Puoi personalizzare il tipo di kernel (linear, rbf, poly) e il parametro C (0.01, 0.1, 1, 10)
+model = SVC(kernel='poly', C=10)
 
 # Adatta il modello ai dati di addestramento
-best_model.fit(X_train, y_train)
+model.fit(X_train, y_train)
 
 # Effettua previsioni sul test set
-y_pred = best_model.predict(X_test)
+y_pred = model.predict(X_test)
 
 # Calcola l'accuratezza del modello
 accuracy = accuracy_score(y_test, y_pred)

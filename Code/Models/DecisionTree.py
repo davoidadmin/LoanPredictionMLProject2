@@ -1,6 +1,7 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import plot_tree
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
@@ -41,8 +42,6 @@ print("Report di Classificazione:")
 print(class_report)
 
 # Grafico per visualizzare l'albero decisionale
-from sklearn.tree import plot_tree
-
 plt.figure(figsize=(12, 6))
 plot_tree(model, filled=True, feature_names=X.columns, class_names=['0', '1'])
 plt.show()
