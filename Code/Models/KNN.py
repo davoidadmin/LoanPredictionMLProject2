@@ -1,7 +1,7 @@
+# Importa le librerie necessarie
 import pandas as pd
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import plot_tree
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
@@ -18,8 +18,8 @@ y = df["Risk_Flag"]
 # Dividi il dataset in training set e test set
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Crea un modello di Decision Tree
-model = DecisionTreeClassifier()
+# Crea un modello KNN
+model = KNeighborsClassifier(n_neighbors=5)  # Puoi personalizzare il numero di vicini (n_neighbors)
 
 # Adatta il modello ai dati di addestramento
 model.fit(X_train, y_train)
@@ -40,21 +40,3 @@ print(conf_matrix)
 class_report = classification_report(y_test, y_pred)
 print("Report di Classificazione:")
 print(class_report)
-
-# Visualizzazione dell'importanza delle feature
-feature_importance = model.feature_importances_
-feature_names = X.columns
-
-# Grafico per visualizzare l'importanza delle feature
-plt.figure(figsize=(10, 6))
-plt.barh(feature_names, feature_importance, color='skyblue')
-plt.xlabel('Importanza delle Feature')
-plt.title('Importanza delle Feature nel Decision Tree')
-plt.gca().invert_yaxis()
-plt.show()
-
-
-# Grafico per visualizzare l'albero decisionale
-plt.figure(figsize=(12, 6))
-plot_tree(model, filled=True, feature_names=X.columns, class_names=['0', '1'])
-plt.show()
