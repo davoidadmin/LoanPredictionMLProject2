@@ -64,6 +64,18 @@ for dataset_name, dataset in zip(dataset_names, datasets):
     print(f"Report di Classificazione per {dataset_name}:")
     print(class_report)
 
+    # Calcola l'importanza delle feature
+    feature_importance = model.feature_importances_
+    feature_names = X.columns
+
+    # Grafico per visualizzare l'importanza delle feature
+    plt.figure(figsize=(10, 6))
+    plt.barh(feature_names, feature_importance, color='skyblue')
+    plt.xlabel('Importanza delle Feature')
+    plt.title(f'Importanza delle Feature nel Decision Tree ({dataset_name})')
+    plt.gca().invert_yaxis()
+    plt.show()
+
 # Crea un grafico a barre per confrontare le accuratezze
 plt.figure(figsize=(8, 6))
 plt.bar(dataset_names, accuracies, color='skyblue')
