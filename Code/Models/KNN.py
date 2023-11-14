@@ -1,69 +1,65 @@
-# Importa le librerie necessarie
 import pandas as pd
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import matplotlib.pyplot as plt
 
-# Importa i dataset
-original_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
-for feature in original_dataset.columns:
-    if original_dataset[feature].dtype == "object":
-        original_dataset[feature] = pd.Categorical(original_dataset[feature]).codes
+# Importa il dataset originale
+dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
+for feature in dataset.columns:
+    if dataset[feature].dtype == "object":
+        dataset[feature] = pd.Categorical(dataset[feature]).codes
 
-z_score_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data_zscore.csv")
-for feature in z_score_dataset.columns:
-    if z_score_dataset[feature].dtype == "object":
-        z_score_dataset[feature] = pd.Categorical(z_score_dataset[feature]).codes
+# Dividi il dataset in variabili indipendenti (X) e variabile target (y)
+X = dataset.drop(["Id", "Risk_Flag"], axis=1)
+y = dataset["Risk_Flag"]
 
-minmax_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data_minmax.csv")
-for feature in minmax_dataset.columns:
-    if minmax_dataset[feature].dtype == "object":
-        minmax_dataset[feature] = pd.Categorical(minmax_dataset[feature]).codes
+# Dividi il dataset in training set e test set
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Elenco dei nomi dei dataset
-dataset_names = ["Original", "Z-Score Normalized", "Min-Max Normalized"]
+# Dividi il set temporaneo in set di validazione e test
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-# Elenco dei dataset
-datasets = [original_dataset, z_score_dataset, minmax_dataset]
+# Crea un modello KNN
+knn = KNeighborsClassifier()
 
-accuracies = []
+# Definisci la griglia degli iperparametri da esplorare
+param_grid = {
+    'n_neighbors': [3, 5, 7, 9],
+    'weights': ['uniform', 'distance'],
+    'p': [1, 2, 3],
+}
 
-# Ciclo attraverso i dataset
-for dataset_name, dataset in zip(dataset_names, datasets):
-    # Dividi il dataset in variabili indipendenti (X) e variabile target (y)
-    X = dataset.drop(["Id", "Risk_Flag", "CITY", "STATE"], axis=1)
-    y = dataset["Risk_Flag"]
+# Crea l'oggetto GridSearchCV
+grid_search = GridSearchCV(knn, param_grid, cv=10, scoring='accuracy')
 
-    # Dividi il dataset in training set e test set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Esegui la ricerca della griglia sull'intero spazio degli iperparametri
+grid_search.fit(X_train, y_train)
 
-    # Crea un modello KNN
-    model = KNeighborsClassifier(n_neighbors=5)  # Puoi personalizzare il numero di vicini (n_neighbors)
+# Visualizza i migliori iperparametri
+print("Migliori iperparametri:", grid_search.best_params_)
 
-    # Adatta il modello ai dati di addestramento
-    model.fit(X_train, y_train)
+# Valuta le prestazioni del modello con i migliori iperparametri sul set di validazione
+best_model = grid_search.best_estimator_
+y_pred = best_model.predict(X_val)
+accuracy_val = accuracy_score(y_val, y_pred)
+print("Accuratezza sul set di validazione:", accuracy_val)
 
-    # Effettua previsioni sul test set
-    y_pred = model.predict(X_test)
+# Valuta le prestazioni del modello con i migliori iperparametri sul test set
+y_pred_test = best_model.predict(X_test)
+accuracy_test = accuracy_score(y_test, y_pred_test)
+print("Accuratezza sul test set:", accuracy_test)
 
-    # Calcola l'accuratezza del modello
-    accuracy = accuracy_score(y_test, y_pred)
-    accuracies.append(accuracy)
+# Calcola la matrice di confusione sul test set
+conf_matrix_test = confusion_matrix(y_test, y_pred_test)
+print("Matrice di Confusione sul test set:")
+print(conf_matrix_test)
 
-    # Calcola la matrice di confusione
-    conf_matrix = confusion_matrix(y_test, y_pred)
+# Calcola il report di classificazione sul test set
+class_report_test = classification_report(y_test, y_pred_test)
+print("Report di Classificazione sul test set:")
+print(class_report_test)
 
-    # Stampa la matrice di confusione
-    print(f"Matrice di Confusione per {dataset_name}:")
-    print(conf_matrix)
 
-    # Calcola il report di classificazione
-    class_report = classification_report(y_test, y_pred)
-
-    # Stampa il report di classificazione
-    print(f"Report di Classificazione per {dataset_name}:")
-    print(class_report)
 
 
 

@@ -1,94 +1,59 @@
 import pandas as pd
-import networkx as nx
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import plot_tree
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import matplotlib.pyplot as plt
 
-# Importa i dataset
-original_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
-for feature in original_dataset.columns:
-    if original_dataset[feature].dtype == "object":
-        original_dataset[feature] = pd.Categorical(original_dataset[feature]).codes
+# Importa il dataset
+dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
+for feature in dataset.columns:
+    if dataset[feature].dtype == "object":
+        dataset[feature] = pd.Categorical(dataset[feature]).codes
 
-z_score_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data_zscore.csv")
-for feature in z_score_dataset.columns:
-    if z_score_dataset[feature].dtype == "object":
-        z_score_dataset[feature] = pd.Categorical(z_score_dataset[feature]).codes
+# Dividi il dataset in variabili indipendenti (X) e variabile target (y)
+X = dataset.drop(["Id", "Risk_Flag"], axis=1)
+y = dataset["Risk_Flag"]
 
-minmax_dataset = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data_minmax.csv")
-for feature in minmax_dataset.columns:
-    if minmax_dataset[feature].dtype == "object":
-        minmax_dataset[feature] = pd.Categorical(minmax_dataset[feature]).codes
+# Dividi il dataset in training set e test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Elenco dei nomi dei dataset
-dataset_names = ["Original", "Z-Score Normalized", "Min-Max Normalized"]
+# Crea un modello Decision Tree
+model = DecisionTreeClassifier()
 
-# Elenco dei dataset
-datasets = [original_dataset, z_score_dataset, minmax_dataset]
+# Definisci la griglia degli iperparametri da esplorare
+param_grid = {
+    'criterion': ['gini', 'entropy'],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
 
-accuracies = []
+# Crea l'oggetto GridSearchCV
+grid_search = GridSearchCV(model, param_grid, cv=5, scoring='accuracy')
 
-# Ciclo attraverso i dataset
-for dataset_name, dataset in zip(dataset_names, datasets):
-    # Dividi il dataset in variabili indipendenti (X) e variabile target (y)
-    X = dataset.drop(["Id", "Risk_Flag", "CITY", "STATE"], axis=1)
-    y = dataset["Risk_Flag"]
+# Esegui la ricerca della griglia sull'intero spazio degli iperparametri
+grid_search.fit(X_train, y_train)
 
-    # Dividi il dataset in training set e test set
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Visualizza i migliori iperparametri
+print("Migliori iperparametri:", grid_search.best_params_)
 
-    # Crea un modello di Decision Tree
-    model = DecisionTreeClassifier()
+# Valuta le prestazioni del modello con i migliori iperparametri sul test set
+best_model = grid_search.best_estimator_
+y_pred = best_model.predict(X_test)
 
-    # Adatta il modello ai dati di addestramento
-    model.fit(X_train, y_train)
+# Calcola l'accuratezza del modello
+accuracy = accuracy_score(y_test, y_pred)
 
-    # Effettua previsioni sul test set
-    y_pred = model.predict(X_test)
+# Calcola la matrice di confusione
+conf_matrix = confusion_matrix(y_test, y_pred)
 
-    # Calcola l'accuratezza del modello
-    accuracy = accuracy_score(y_test, y_pred)
-    accuracies.append(accuracy)
+# Stampa la matrice di confusione
+print(f"Matrice di Confusione:")
+print(conf_matrix)
 
-    # Calcola la matrice di confusione
-    conf_matrix = confusion_matrix(y_test, y_pred)
+# Calcola il report di classificazione
+class_report = classification_report(y_test, y_pred)
 
-    # Stampa la matrice di confusione
-    print(f"Matrice di Confusione per {dataset_name}:")
-    print(conf_matrix)
-
-    # Calcola il report di classificazione
-    class_report = classification_report(y_test, y_pred)
-
-    # Stampa il report di classificazione
-    print(f"Report di Classificazione per {dataset_name}:")
-    print(class_report)
-
-    # Calcola l'importanza delle feature
-    feature_importance = model.feature_importances_
-    feature_names = X.columns
-
-    # Grafico per visualizzare l'importanza delle feature
-    plt.figure(figsize=(10, 6))
-    plt.barh(feature_names, feature_importance, color='skyblue')
-    plt.xlabel('Importanza delle Feature')
-    plt.title(f'Importanza delle Feature nel Decision Tree ({dataset_name})')
-    plt.gca().invert_yaxis()
-    plt.show()
-
-    # Grafico per visualizzare l'albero decisionale
-    plt.figure(figsize=(12, 6))
-    plot_tree(model, filled=True, feature_names=X.columns, class_names=['0', '1'])
-    plt.title(f'Albero Decisionale nel Decision Tree ({dataset_name})')
-    plt.show()
-
-# Crea un grafico a barre per confrontare le accuratezze
-plt.figure(figsize=(8, 6))
-plt.bar(dataset_names, accuracies, color='skyblue')
-plt.xlabel('Dataset')
-plt.ylabel('Accuratezza')
-plt.title('Confronto delle Accuratezze tra i Diversi Datasets')
-plt.show()
+# Stampa il report di classificazione
+print(f"Report di Classificazione:")
+print(class_report)
 
