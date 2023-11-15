@@ -19,18 +19,26 @@ X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_
 # Dividi il set temporaneo in set di validazione e test
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
+
+# Crea un array di pesi da utilizzare durante l'addestramento
+sample_weights = y_train.map({0: 1, 1: 3})
+
 # Crea un modello KNN
 knn = KNeighborsClassifier()
 
+# Addestra il modello KNN con i pesi personalizzati
+knn.fit(X_train, y_train, sample_weight=sample_weights)
+
 # Definisci la griglia degli iperparametri da esplorare
 param_grid = {
-    'n_neighbors': [3, 5, 7, 9],
-    'weights': ['uniform', 'distance'],
-    'p': [1, 2, 3],
+    'n_neighbors': [3, 6, 9],
+    'weights': ['distance'],
+    'p': [2],
+    'metric': ['euclidean', 'manhattan', 'minkowski', 'chebyshev']
 }
 
 # Crea l'oggetto GridSearchCV
-grid_search = GridSearchCV(knn, param_grid, cv=10, scoring='accuracy')
+grid_search = GridSearchCV(knn, param_grid, cv=5, scoring='accuracy', verbose=3)
 
 # Esegui la ricerca della griglia sull'intero spazio degli iperparametri
 grid_search.fit(X_train, y_train)
@@ -48,17 +56,6 @@ print("Accuratezza sul set di validazione:", accuracy_val)
 y_pred_test = best_model.predict(X_test)
 accuracy_test = accuracy_score(y_test, y_pred_test)
 print("Accuratezza sul test set:", accuracy_test)
-
-# Calcola la matrice di confusione sul test set
-conf_matrix_test = confusion_matrix(y_test, y_pred_test)
-print("Matrice di Confusione sul test set:")
-print(conf_matrix_test)
-
-# Calcola il report di classificazione sul test set
-class_report_test = classification_report(y_test, y_pred_test)
-print("Report di Classificazione sul test set:")
-print(class_report_test)
-
 
 
 

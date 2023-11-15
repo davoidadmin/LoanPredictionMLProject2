@@ -16,29 +16,20 @@ y = dataset["Risk_Flag"]
 # Dividi il dataset in training set e test set
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Crea un modello Decision Tree
-model = DecisionTreeClassifier()
-
-# Definisci la griglia degli iperparametri da esplorare
-param_grid = {
-    'criterion': ['gini', 'entropy'],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4]
-}
-
-# Crea l'oggetto GridSearchCV
-grid_search = GridSearchCV(model, param_grid, cv=5, scoring='accuracy')
+class_weights = {0: 1, 1: 3}
+model = DecisionTreeClassifier(
+    criterion='gini',
+    max_depth=20,
+    min_samples_split=10,
+    min_samples_leaf=4,
+    class_weight=class_weights
+)
 
 # Esegui la ricerca della griglia sull'intero spazio degli iperparametri
-grid_search.fit(X_train, y_train)
-
-# Visualizza i migliori iperparametri
-print("Migliori iperparametri:", grid_search.best_params_)
+model.fit(X_train, y_train)
 
 # Valuta le prestazioni del modello con i migliori iperparametri sul test set
-best_model = grid_search.best_estimator_
-y_pred = best_model.predict(X_test)
+y_pred = model.predict(X_test)
 
 # Calcola l'accuratezza del modello
 accuracy = accuracy_score(y_test, y_pred)
