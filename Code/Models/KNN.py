@@ -19,15 +19,11 @@ X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_
 # Dividi il set temporaneo in set di validazione e test
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-
-# Crea un array di pesi da utilizzare durante l'addestramento
-sample_weights = y_train.map({0: 1, 1: 3})
-
 # Crea un modello KNN
 knn = KNeighborsClassifier()
 
 # Addestra il modello KNN con i pesi personalizzati
-knn.fit(X_train, y_train, sample_weight=sample_weights)
+knn.fit(X_train, y_train)
 
 # Definisci la griglia degli iperparametri da esplorare
 param_grid = {
