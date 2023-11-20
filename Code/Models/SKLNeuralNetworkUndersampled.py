@@ -1,10 +1,11 @@
 import os
-
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils.class_weight import compute_class_weight
 from imblearn.under_sampling import RandomUnderSampler
 
 # Importa il dataset
@@ -17,27 +18,38 @@ for feature in dataset.columns:
 X = dataset.drop(["Id", "Risk_Flag"], axis=1)
 y = dataset["Risk_Flag"]
 
-# Dividi il dataset in training set, validation set e test set
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
-
 # Applica l'undersampling alla classe sovrarappresentata ('Risk_Flag'=0) solo sul training set
 undersampler = RandomUnderSampler(sampling_strategy=0.5, random_state=42)
-X_resampled, y_resampled = undersampler.fit_resample(X_train, y_train)
+X_resampled, y_resampled = undersampler.fit_resample(X, y)
 
-# Crea un modello Random Forest con i parametri specificati
-model = RandomForestClassifier(
-    n_estimators=150,
-    max_depth=20,
-    min_samples_split=10,
-    min_samples_leaf=4,
-    bootstrap=False,
+# Dividi il dataset in training set, validation set e test set
+X_train, X_temp, y_train, y_temp = train_test_split(X_resampled, y_resampled, test_size=0.3, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+
+# Standardizza le features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_val = scaler.transform(X_val)
+X_test = scaler.transform(X_test)
+
+# Calcola i pesi delle classi
+class_weights = compute_class_weight('balanced', classes=[0, 1], y=y_train)
+class_weights_dict = {0: class_weights[0], 1: class_weights[1]}
+
+# Definisci il modello di rete neurale con i parametri specificati
+model = MLPClassifier(
+    alpha=0.01,
+    hidden_layer_sizes=(128, 64, 32),
+    max_iter=200,
     random_state=42,
-    verbose=True
+    activation='tanh',
+    batch_size=64,
+    learning_rate='adaptive',
+    solver='lbfgs'
 )
 
 # Adatta il modello ai dati di addestramento undersampled
-model.fit(X_resampled, y_resampled)
+model.fit(X_train, y_train)
 
 # Effettua previsioni sul validation set
 y_val_pred = model.predict(X_val)
@@ -71,7 +83,7 @@ support_1 = class_report['1']['support']
 
 # Salva i risultati nel file CSV
 results_dict = {
-    'Model': ['MPL'],
+    'Model': ['MPL_UnderSampled'],
     'Accuracy': [accuracy_val],
     'Confusion_Matrix_TP': [conf_matrix_val[0, 0]],
     'Confusion_Matrix_FP': [conf_matrix_val[0, 1]],

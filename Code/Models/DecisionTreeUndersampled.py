@@ -1,9 +1,8 @@
 import os
-
 import pandas as pd
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -25,15 +24,13 @@ X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, r
 undersampler = RandomUnderSampler(sampling_strategy=0.5, random_state=42)
 X_resampled, y_resampled = undersampler.fit_resample(X_train, y_train)
 
-# Crea un modello Random Forest con i parametri specificati
-model = RandomForestClassifier(
-    n_estimators=150,
+class_weights = {0: 1, 1: 3}
+model = DecisionTreeClassifier(
+    criterion='gini',
     max_depth=20,
     min_samples_split=10,
     min_samples_leaf=4,
-    bootstrap=False,
-    random_state=42,
-    verbose=True
+    class_weight=class_weights
 )
 
 # Adatta il modello ai dati di addestramento undersampled
@@ -71,7 +68,7 @@ support_1 = class_report['1']['support']
 
 # Salva i risultati nel file CSV
 results_dict = {
-    'Model': ['MPL'],
+    'Model': ['DT_UnderSampled'],
     'Accuracy': [accuracy_val],
     'Confusion_Matrix_TP': [conf_matrix_val[0, 0]],
     'Confusion_Matrix_FP': [conf_matrix_val[0, 1]],
@@ -111,3 +108,4 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver Operating Characteristic')
 plt.legend(loc='lower right')
 plt.show()
+
