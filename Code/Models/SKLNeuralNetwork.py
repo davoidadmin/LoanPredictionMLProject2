@@ -79,7 +79,7 @@ support_1 = class_report['1']['support']
 
 # Salva i risultati nel file CSV
 results_dict = {
-    'Model': ['MPL'],
+    'Model': ['MLP'],
     'Accuracy': [accuracy_val],
     'Confusion_Matrix_TP': [conf_matrix_val[0, 0]],
     'Confusion_Matrix_FP': [conf_matrix_val[0, 1]],
