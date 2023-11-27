@@ -16,65 +16,65 @@ for feature in dataset.columns:
 X = dataset.drop(["Id", "Risk_Flag"], axis=1)
 y = dataset["Risk_Flag"]
 
-# Dividi il dataset in training set e validation set
-X_train, X_validation, y_train, y_validation = train_test_split(X, y, test_size=0.3, random_state=42)
+# Dividi il dataset in training set, validation set e test set
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-# Applica l'undersampling alla classe sovrarappresentata ('Risk_Flag'=0) solo sul training set
+# Applica l'undersampling alla classe sovrarappresentata ('Risk_Flag'=0) sia sul training che sul validation set
 undersampler = RandomUnderSampler(sampling_strategy=0.5, random_state=42)
-X_resampled, y_resampled = undersampler.fit_resample(X_train, y_train)
+X_train_resampled, y_train_resampled = undersampler.fit_resample(X_train, y_train)
+X_val_resampled, y_val_resampled = undersampler.fit_resample(X_val, y_val)
 
 # Crea un modello KNN con i parametri specificati
 model = KNeighborsClassifier(n_neighbors=9, p=2, weights='uniform')
 
 # Adatta il modello ai dati di addestramento
-model.fit(X_resampled, y_resampled)
+model.fit(X_train_resampled, y_train_resampled)
 
 # Effettua previsioni sul validation set
-y_pred = model.predict(X_validation)
+y_pred = model.predict(X_val_resampled)
 
 # Calcola l'accuratezza del modello sul validation set
-accuracy = accuracy_score(y_validation, y_pred)
+accuracy = accuracy_score(y_val_resampled, y_pred)
 
 # Calcola la matrice di confusione
-conf_matrix = confusion_matrix(y_validation, y_pred)
+conf_matrix = confusion_matrix(y_val_resampled, y_pred)
 
 # Stampa la matrice di confusione
 print(f"Matrice di Confusione:")
 print(conf_matrix)
 
 # Calcola il report di classificazione
-class_report = classification_report(y_validation, y_pred, output_dict=True)
+class_report = classification_report(y_val_resampled, y_pred, output_dict=True)
 
-# Stampa il report di classificazione
+# Stampa il report di classificazione approssimato
 print(f"Report di Classificazione:")
-print(class_report)
-
-# Estrai i valori dal classification report
-precision_0 = class_report['0']['precision']
-precision_1 = class_report['1']['precision']
-recall_0 = class_report['0']['recall']
-recall_1 = class_report['1']['recall']
-f1_score_0 = class_report['0']['f1-score']
-f1_score_1 = class_report['1']['f1-score']
-support_0 = class_report['0']['support']
-support_1 = class_report['1']['support']
+print(f"Accuracy: {round(accuracy, 2)}")
+print("Precision_0: {:.2f}".format(class_report['0']['precision']))
+print("Precision_1: {:.2f}".format(class_report['1']['precision']))
+print("Recall_0: {:.2f}".format(class_report['0']['recall']))
+print("Recall_1: {:.2f}".format(class_report['1']['recall']))
+print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
+print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
+print("Support_0: {:.2f}".format(class_report['0']['support']))
+print("Support_1: {:.2f}".format(class_report['1']['support']))
 
 # Salva i risultati nel file CSV
 results_dict = {
     'Model': ['KNN_UnderSampled'],
-    'Accuracy': [accuracy],
+    'Accuracy': [round(accuracy, 2)],
     'Confusion_Matrix_TP': [conf_matrix[0, 0]],
     'Confusion_Matrix_FP': [conf_matrix[0, 1]],
     'Confusion_Matrix_FN': [conf_matrix[1, 0]],
     'Confusion_Matrix_TN': [conf_matrix[1, 1]],
-    'Precision_0': [precision_0],
-    'Precision_1': [precision_1],
-    'Recall_0': [recall_0],
-    'Recall_1': [recall_1],
-    'F1_Score_0': [f1_score_0],
-    'F1_Score_1': [f1_score_1],
-    'Support_0': [support_0],
-    'Support_1': [support_1]
+    'Precision_0': [round(class_report['0']['precision'], 2)],
+    'Precision_1': [round(class_report['1']['precision'], 2)],
+    'Recall_0': [round(class_report['0']['recall'], 2)],
+    'Recall_1': [round(class_report['1']['recall'], 2)],
+    'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
+    'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
+    'Support_0': [round(class_report['0']['support'], 2)],
+    'Support_1': [round(class_report['1']['support'], 2)]
 }
 
 # Aggiungi i risultati al DataFrame
@@ -88,8 +88,8 @@ else:
     results_df.to_csv('results.csv', mode='a', header=False, index=False)
 
 # Calcola la curva ROC e l'area sotto la curva
-y_scores = model.predict_proba(X_validation)[:, 1]
-fpr, tpr, _ = roc_curve(y_validation, y_scores)
+y_scores = model.predict_proba(X_val_resampled)[:, 1]
+fpr, tpr, _ = roc_curve(y_val_resampled, y_scores)
 roc_auc = auc(fpr, tpr)
 
 # Visualizza la curva ROC

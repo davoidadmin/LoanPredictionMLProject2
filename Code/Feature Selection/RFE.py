@@ -27,7 +27,7 @@ feature_names = X.columns
 model = LogisticRegression()  # Puoi sostituire con il tuo modello di machine learning preferito
 
 # Crea un selettore RFE
-rfe = RFE(model, n_features_to_select=None)
+rfe = RFE(model, n_features_to_select=11)
 
 # Adatta il selettore RFE ai dati
 rfe.fit(X, y)
@@ -48,6 +48,18 @@ shap_importance = abs(shap_values).mean(axis=0)
 print("Caratteristiche selezionate tramite RFE:", X.columns[rfe.support_])
 print("Importanza dei coefficienti:", coeff_importance)
 print("Importanza degli Shapley values:", shap_importance)
+
+# Salvataggio degli indici di importanza in un DataFrame
+feature_importance_df = pd.DataFrame({
+    'Feature': X.columns[rfe.support_],
+    'Coefficient_Importance': coeff_importance,
+    'Shapley_Importance': shap_importance
+})
+
+# Stampa la tabella e salva in un file CSV
+print("\nTabella di Importanza delle Caratteristiche:")
+print(feature_importance_df)
+feature_importance_df.to_csv('feature_importance.csv', index=False)
 
 # Plot dei coefficienti
 plt.figure(figsize=(10, 6))

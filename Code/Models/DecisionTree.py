@@ -19,13 +19,11 @@ y = dataset["Risk_Flag"]
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
-class_weights = {0: 1, 1: 3}
 model = DecisionTreeClassifier(
     criterion='gini',
     max_depth=20,
     min_samples_split=10,
-    min_samples_leaf=4,
-    class_weight=class_weights
+    min_samples_leaf=4
 )
 
 # Adatta il modello ai dati di addestramento
@@ -47,38 +45,35 @@ print(conf_matrix_val)
 # Calcola il report di classificazione sul validation set
 class_report = classification_report(y_val, y_val_pred, output_dict=True)
 
-# Stampa il report di classificazione sul validation set
-print(f"Report di Classificazione (Validation Set):")
-print(class_report)
-
-# Estrai i valori dal classification report
-precision_0 = class_report['0']['precision']
-precision_1 = class_report['1']['precision']
-recall_0 = class_report['0']['recall']
-recall_1 = class_report['1']['recall']
-f1_score_0 = class_report['0']['f1-score']
-f1_score_1 = class_report['1']['f1-score']
-support_0 = class_report['0']['support']
-support_1 = class_report['1']['support']
+# Stampa il report di classificazione approssimato
+print(f"Report di Classificazione:")
+print(f"Accuracy: {round(accuracy_val, 2)}")
+print("Precision_0: {:.2f}".format(class_report['0']['precision']))
+print("Precision_1: {:.2f}".format(class_report['1']['precision']))
+print("Recall_0: {:.2f}".format(class_report['0']['recall']))
+print("Recall_1: {:.2f}".format(class_report['1']['recall']))
+print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
+print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
+print("Support_0: {:.2f}".format(class_report['0']['support']))
+print("Support_1: {:.2f}".format(class_report['1']['support']))
 
 # Salva i risultati nel file CSV
 results_dict = {
     'Model': ['DT'],
-    'Accuracy': [accuracy_val],
+    'Accuracy': [round(accuracy_val, 2)],
     'Confusion_Matrix_TP': [conf_matrix_val[0, 0]],
     'Confusion_Matrix_FP': [conf_matrix_val[0, 1]],
     'Confusion_Matrix_FN': [conf_matrix_val[1, 0]],
     'Confusion_Matrix_TN': [conf_matrix_val[1, 1]],
-    'Precision_0': [precision_0],
-    'Precision_1': [precision_1],
-    'Recall_0': [recall_0],
-    'Recall_1': [recall_1],
-    'F1_Score_0': [f1_score_0],
-    'F1_Score_1': [f1_score_1],
-    'Support_0': [support_0],
-    'Support_1': [support_1]
+    'Precision_0': [round(class_report['0']['precision'], 2)],
+    'Precision_1': [round(class_report['1']['precision'], 2)],
+    'Recall_0': [round(class_report['0']['recall'], 2)],
+    'Recall_1': [round(class_report['1']['recall'], 2)],
+    'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
+    'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
+    'Support_0': [round(class_report['0']['support'], 2)],
+    'Support_1': [round(class_report['1']['support'], 2)]
 }
-
 # Aggiungi i risultati al DataFrame
 results_df = pd.DataFrame(results_dict)
 
