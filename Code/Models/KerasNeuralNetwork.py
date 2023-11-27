@@ -17,7 +17,7 @@ X = dataset.drop(["Id", "Risk_Flag"], axis=1)
 y = dataset["Risk_Flag"]
 
 # Dividi il dataset in training set e test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 # Calcola i pesi delle classi
 class_weights = compute_class_weight('balanced', classes=[0, 1], y=y_train)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Importa il dataset
-df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\loan_data_1.csv")
+df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
 
 # 1.3: Calcola il range di valori della variabile "Experience"
 Experience_range = df["Experience"].max() - df["Experience"].min()

@@ -1,9 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Importa il dataset
-df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\loan_data_1.csv")
+df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
 
 #   VISUALIZZAZIONE DISTRIBUZIONE SINGOLE FEATURE (NB: NON CICLARE, STAMPA OGNI FEATURE CON GRAFICO AD HOC)
 #  Itera su tutte le feature
@@ -16,7 +15,7 @@ for feature in df.columns:
          plt.xlabel(feature)
          plt.ylabel("Frequenza")
          plt.show()
-      else:
+     else:
           # La feature è di tipo numerico
           # Visualizza un grafico con media, deviazione standard, minimo e massimo
           if df[feature].name == "Risk_Flag":

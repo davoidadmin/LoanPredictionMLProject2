@@ -15,6 +15,9 @@ erroneous_values = []
 
 # Controlla colonne numeriche
 numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+# Se "Risk_Flag" è presente nelle colonne numeriche, escludilo
+if "Risk_Flag" in numeric_columns:
+    numeric_columns = numeric_columns.drop("Risk_Flag")
 numeric_erroneous_values = [{"Feature": col, "Numero di valori errati o anomali": (df[col] < 0).sum()} for col in numeric_columns]
 erroneous_values.extend(numeric_erroneous_values)
 
