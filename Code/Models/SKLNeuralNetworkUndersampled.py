@@ -1,11 +1,12 @@
 import os
 import pandas as pd
+import shap
+import numpy as np
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils.class_weight import compute_class_weight
 from imblearn.under_sampling import RandomUnderSampler
 
 # Importa il dataset
@@ -45,76 +46,92 @@ model = MLPClassifier(
     solver='lbfgs'
 )
 
+# Wrap the MLPClassifier model using shap.models
+model_wrap = shap.models.sklearn.Predictor(model.predict_proba)
+
 # Adatta il modello ai dati di addestramento
 model.fit(X_train_resampled, y_train_resampled)
 
 # Effettua previsioni sul validation set
 y_pred = model.predict(X_val_resampled)
 
-# Calcola l'accuratezza del modello sul validation set
-accuracy = accuracy_score(y_val_resampled, y_pred)
+#Setting up SHAP Explainer
+explainer = shap.Explainer(model)
+shap_values = explainer.shap_values(X_val_resampled)
 
-# Calcola la matrice di confusione
-conf_matrix = confusion_matrix(y_val_resampled, y_pred)
+#Display the summary_plot using SHAP values and testing set.
+shap.summary_plot(shap_values, X_val_resampled)
 
-# Stampa la matrice di confusione
-print(f"Matrice di Confusione:")
-print(conf_matrix)
+#Display the summary_plot of the label “0”.
+shap.summary_plot(shap_values[0], X_val_resampled)
 
-# Calcola il report di classificazione
-class_report = classification_report(y_val_resampled, y_pred, output_dict=True)
+#Display the decision plot for Risk_Flag=1
+shap.decision_plot(explainer.expected_value[1], shap_values[1], X_val_resampled.columns, ignore_warnings=True)
 
-# Stampa il report di classificazione approssimato
-print(f"Report di Classificazione:")
-print(f"Accuracy: {round(accuracy, 2)}")
-print("Precision_0: {:.2f}".format(class_report['0']['precision']))
-print("Precision_1: {:.2f}".format(class_report['1']['precision']))
-print("Recall_0: {:.2f}".format(class_report['0']['recall']))
-print("Recall_1: {:.2f}".format(class_report['1']['recall']))
-print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
-print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
-print("Support_0: {:.2f}".format(class_report['0']['support']))
-print("Support_1: {:.2f}".format(class_report['1']['support']))
-
-# Salva i risultati nel file CSV
-results_dict = {
-    'Model': ['MPL_UnderSampled'],
-    'Accuracy': [round(accuracy, 2)],
-    'Confusion_Matrix_TP': [conf_matrix[0, 0]],
-    'Confusion_Matrix_FP': [conf_matrix[0, 1]],
-    'Confusion_Matrix_FN': [conf_matrix[1, 0]],
-    'Confusion_Matrix_TN': [conf_matrix[1, 1]],
-    'Precision_0': [round(class_report['0']['precision'], 2)],
-    'Precision_1': [round(class_report['1']['precision'], 2)],
-    'Recall_0': [round(class_report['0']['recall'], 2)],
-    'Recall_1': [round(class_report['1']['recall'], 2)],
-    'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
-    'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
-    'Support_0': [round(class_report['0']['support'], 2)],
-    'Support_1': [round(class_report['1']['support'], 2)]
-}
-
-# Aggiungi i risultati al DataFrame
-results_df = pd.DataFrame(results_dict)
-
-# Se il file non esiste, aggiungi l'intestazione
-if not os.path.isfile('results.csv'):
-    results_df.to_csv('results.csv', index=False)
-else:
-    # Se il file esiste, aggiungi i risultati in append
-    results_df.to_csv('results.csv', mode='a', header=False, index=False)
-
-# Calcola la curva ROC e l'area sotto la curva
-y_scores = model.predict_proba(X_val_resampled)[:, 1]
-fpr, tpr, _ = roc_curve(y_val_resampled, y_scores)
-roc_auc = auc(fpr, tpr)
-
-# Visualizza la curva ROC
-plt.figure()
-plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Receiver Operating Characteristic')
-plt.legend(loc='lower right')
-plt.show()
+# # Calcola l'accuratezza del modello sul validation set
+# accuracy = accuracy_score(y_val_resampled, y_pred)
+#
+# # Calcola la matrice di confusione
+# conf_matrix = confusion_matrix(y_val_resampled, y_pred)
+#
+# # Stampa la matrice di confusione
+# print(f"Matrice di Confusione:")
+# print(conf_matrix)
+#
+# # Calcola il report di classificazione
+# class_report = classification_report(y_val_resampled, y_pred, output_dict=True)
+#
+# # Stampa il report di classificazione approssimato
+# print(f"Report di Classificazione:")
+# print(f"Accuracy: {round(accuracy, 2)}")
+# print("Precision_0: {:.2f}".format(class_report['0']['precision']))
+# print("Precision_1: {:.2f}".format(class_report['1']['precision']))
+# print("Recall_0: {:.2f}".format(class_report['0']['recall']))
+# print("Recall_1: {:.2f}".format(class_report['1']['recall']))
+# print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
+# print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
+# print("Support_0: {:.2f}".format(class_report['0']['support']))
+# print("Support_1: {:.2f}".format(class_report['1']['support']))
+#
+# # Salva i risultati nel file CSV
+# results_dict = {
+#     'Model': ['MPL_UnderSampled'],
+#     'Accuracy': [round(accuracy, 2)],
+#     'Confusion_Matrix_TP': [conf_matrix[0, 0]],
+#     'Confusion_Matrix_FP': [conf_matrix[0, 1]],
+#     'Confusion_Matrix_FN': [conf_matrix[1, 0]],
+#     'Confusion_Matrix_TN': [conf_matrix[1, 1]],
+#     'Precision_0': [round(class_report['0']['precision'], 2)],
+#     'Precision_1': [round(class_report['1']['precision'], 2)],
+#     'Recall_0': [round(class_report['0']['recall'], 2)],
+#     'Recall_1': [round(class_report['1']['recall'], 2)],
+#     'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
+#     'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
+#     'Support_0': [round(class_report['0']['support'], 2)],
+#     'Support_1': [round(class_report['1']['support'], 2)]
+# }
+#
+# # Aggiungi i risultati al DataFrame
+# results_df = pd.DataFrame(results_dict)
+#
+# # Se il file non esiste, aggiungi l'intestazione
+# if not os.path.isfile('results.csv'):
+#     results_df.to_csv('results.csv', index=False)
+# else:
+#     # Se il file esiste, aggiungi i risultati in append
+#     results_df.to_csv('results.csv', mode='a', header=False, index=False)
+#
+# # Calcola la curva ROC e l'area sotto la curva
+# y_scores = model.predict_proba(X_val_resampled)[:, 1]
+# fpr, tpr, _ = roc_curve(y_val_resampled, y_scores)
+# roc_auc = auc(fpr, tpr)
+#
+# # Visualizza la curva ROC
+# plt.figure()
+# plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+# plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title('Receiver Operating Characteristic')
+# plt.legend(loc='lower right')
+# plt.show()

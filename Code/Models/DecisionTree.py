@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import shap
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
@@ -74,6 +75,7 @@ results_dict = {
     'Support_0': [round(class_report['0']['support'], 2)],
     'Support_1': [round(class_report['1']['support'], 2)]
 }
+
 # Aggiungi i risultati al DataFrame
 results_df = pd.DataFrame(results_dict)
 

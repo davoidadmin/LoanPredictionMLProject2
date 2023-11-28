@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+import shap
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -28,7 +29,7 @@ model = RandomForestClassifier(
     min_samples_leaf=4,
     bootstrap=False,
     random_state=42,
-    verbose=True
+    verbose=3
 )
 
 # Adatta il modello ai dati di addestramento

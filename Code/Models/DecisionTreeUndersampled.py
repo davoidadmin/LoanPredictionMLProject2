@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import shap
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
