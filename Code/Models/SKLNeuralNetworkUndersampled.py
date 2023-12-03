@@ -2,10 +2,10 @@ import os
 import pandas as pd
 import shap
 import numpy as np
+import joblib  # Use joblib for efficient saving/loading of objects
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.preprocessing import StandardScaler
 from imblearn.under_sampling import RandomUnderSampler
 
@@ -46,27 +46,24 @@ model = MLPClassifier(
     solver='lbfgs'
 )
 
-# Wrap the MLPClassifier model using shap.models
-model_wrap = shap.models.sklearn.Predictor(model.predict_proba)
-
 # Adatta il modello ai dati di addestramento
 model.fit(X_train_resampled, y_train_resampled)
 
 # Effettua previsioni sul validation set
 y_pred = model.predict(X_val_resampled)
 
-#Setting up SHAP Explainer
-explainer = shap.Explainer(model)
-shap_values = explainer.shap_values(X_val_resampled)
-
-#Display the summary_plot using SHAP values and testing set.
-shap.summary_plot(shap_values, X_val_resampled)
-
-#Display the summary_plot of the label “0”.
-shap.summary_plot(shap_values[0], X_val_resampled)
-
-#Display the decision plot for Risk_Flag=1
-shap.decision_plot(explainer.expected_value[1], shap_values[1], X_val_resampled.columns, ignore_warnings=True)
+# # Save the datasets and the model
+# saved_data = {
+#     'X_train_resampled': X_train_resampled,
+#     'y_train_resampled': y_train_resampled,
+#     'X_val_resampled': X_val_resampled,
+#     'y_val_resampled': y_val_resampled,
+#     'X_test': X_test,
+#     'y_test': y_test,
+#     'model': model
+# }
+#
+# joblib.dump(saved_data, 'saved_model_data.joblib')
 
 # # Calcola l'accuratezza del modello sul validation set
 # accuracy = accuracy_score(y_val_resampled, y_pred)
