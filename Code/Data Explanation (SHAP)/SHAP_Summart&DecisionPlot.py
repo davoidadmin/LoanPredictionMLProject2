@@ -2,7 +2,7 @@ import shap
 import joblib
 
 # Load the saved model and data
-loaded_data = joblib.load('C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\Code\\Models\\saved_model_data.joblib')
+loaded_data = joblib.load('/Code/Models/saved_model_data.joblib')
 X_val_resampled = loaded_data['X_val_resampled']
 
 # Extract the model from loaded data
@@ -28,7 +28,6 @@ shap.decision_plot(explainer.expected_value[0], shap_values[0], background_summa
 
 # Display the decision plot for Risk_Flag=1
 shap.decision_plot(explainer.expected_value[1], shap_values[1], background_summary, feature_names=feature_names, ignore_warnings=True)
-
 
 
 
