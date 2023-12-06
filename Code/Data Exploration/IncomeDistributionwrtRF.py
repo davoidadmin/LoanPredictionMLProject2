@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
 
 # VISUALIZZAZIONE DISTRIBUZIONE DELLE FEATURE RISPETTO ALLA VARIABILE TARGET
-# 1. FEATURE NUMERICHE DA CATEGORIZZARE
-# 1.1: Calcola il range di valori della variabile "Income"
+# FEATURE NUMERICHE DA CATEGORIZZARE
+# Calcola il range di valori della variabile "Income"
 income_range = df["Income"].max() - df["Income"].min()
 
 # Calcola i valori di soglia per le tre categorie

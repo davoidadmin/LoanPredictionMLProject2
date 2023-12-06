@@ -1,11 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Importa il dataset
 df = pd.read_csv("C:\\Users\\dave9\\PycharmProjects\\LoanPredictionMLProject\\venv\\Dataset\\loan_data.csv")
 
-# 1.2: Calcola il range di valori della variabile "Age"
+# Calcola il range di valori della variabile "Age"
+
 # Imposta manualmente le soglie per le categorie
 age_thresholds = [20, 39, 59, 79]
 

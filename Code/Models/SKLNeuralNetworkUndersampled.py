@@ -1,10 +1,10 @@
 import os
-import random
 import pandas as pd
 import shap
 import numpy as np
-import joblib  # Use joblib for efficient saving/loading of objects
+import joblib
 from matplotlib import pyplot as plt
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
@@ -53,83 +53,110 @@ model.fit(X_train_resampled, y_train_resampled)
 # Effettua previsioni sul validation set
 y_pred = model.predict(X_val_resampled)
 
-# # Save the datasets and the model
-# saved_data = {
-#     'X_train_resampled': X_train_resampled,
-#     'y_train_resampled': y_train_resampled,
-#     'X_val_resampled': X_val_resampled,
-#     'y_val_resampled': y_val_resampled,
-#     'X_test': X_test,
-#     'y_test': y_test,
-#     'model': model
-# }
-#
-# joblib.dump(saved_data, 'saved_model_data.joblib')
+# Set up SHAP explainer with background summary
+background_summary = shap.sample(X_val_resampled, 10)  # Adjust the number based on your available memory
+explainer = shap.KernelExplainer(model.predict_proba, background_summary)
 
-# # Calcola l'accuratezza del modello sul validation set
-# accuracy = accuracy_score(y_val_resampled, y_pred)
-#
-# # Calcola la matrice di confusione
-# conf_matrix = confusion_matrix(y_val_resampled, y_pred)
-#
-# # Stampa la matrice di confusione
-# print(f"Matrice di Confusione:")
-# print(conf_matrix)
-#
-# # Calcola il report di classificazione
-# class_report = classification_report(y_val_resampled, y_pred, output_dict=True)
-#
-# # Stampa il report di classificazione approssimato
-# print(f"Report di Classificazione:")
-# print(f"Accuracy: {round(accuracy, 2)}")
-# print("Precision_0: {:.2f}".format(class_report['0']['precision']))
-# print("Precision_1: {:.2f}".format(class_report['1']['precision']))
-# print("Recall_0: {:.2f}".format(class_report['0']['recall']))
-# print("Recall_1: {:.2f}".format(class_report['1']['recall']))
-# print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
-# print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
-# print("Support_0: {:.2f}".format(class_report['0']['support']))
-# print("Support_1: {:.2f}".format(class_report['1']['support']))
-#
-# # Salva i risultati nel file CSV
-# results_dict = {
-#     'Model': ['MPL_UnderSampled'],
-#     'Accuracy': [round(accuracy, 2)],
-#     'Confusion_Matrix_TP': [conf_matrix[0, 0]],
-#     'Confusion_Matrix_FP': [conf_matrix[0, 1]],
-#     'Confusion_Matrix_FN': [conf_matrix[1, 0]],
-#     'Confusion_Matrix_TN': [conf_matrix[1, 1]],
-#     'Precision_0': [round(class_report['0']['precision'], 2)],
-#     'Precision_1': [round(class_report['1']['precision'], 2)],
-#     'Recall_0': [round(class_report['0']['recall'], 2)],
-#     'Recall_1': [round(class_report['1']['recall'], 2)],
-#     'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
-#     'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
-#     'Support_0': [round(class_report['0']['support'], 2)],
-#     'Support_1': [round(class_report['1']['support'], 2)]
-# }
-#
-# # Aggiungi i risultati al DataFrame
-# results_df = pd.DataFrame(results_dict)
-#
-# # Se il file non esiste, aggiungi l'intestazione
-# if not os.path.isfile('results.csv'):
-#     results_df.to_csv('results.csv', index=False)
-# else:
-#     # Se il file esiste, aggiungi i risultati in append
-#     results_df.to_csv('results.csv', mode='a', header=False, index=False)
-#
-# # Calcola la curva ROC e l'area sotto la curva
-# y_scores = model.predict_proba(X_val_resampled)[:, 1]
-# fpr, tpr, _ = roc_curve(y_val_resampled, y_scores)
-# roc_auc = auc(fpr, tpr)
-#
-# # Visualizza la curva ROC
-# plt.figure()
-# plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-# plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-# plt.xlabel('False Positive Rate')
-# plt.ylabel('True Positive Rate')
-# plt.title('Receiver Operating Characteristic')
-# plt.legend(loc='lower right')
-# plt.show()
+# Now use the selected samples to calculate SHAP values
+shap_values = explainer.shap_values(background_summary)
+
+# Choose a sample with outcome 0
+sample_0_index = np.random.choice(np.where(y_val_resampled == 0)[0], size=1, replace=False)
+sample_0 = pd.Series(X_val_resampled[sample_0_index].flatten(), index=X.columns)
+
+# Choose a sample with outcome 1
+sample_1_index = np.random.choice(np.where(y_val_resampled == 1)[0], size=1, replace=False)
+sample_1 = pd.Series(X_val_resampled[sample_1_index].flatten(), index=X.columns)
+
+# Compute SHAP values for the chosen samples
+shap_values_0 = explainer.shap_values(sample_0)[0]
+shap_values_1 = explainer.shap_values(sample_1)[0]
+
+# Visualize force plot for outcome 0
+shap.force_plot(explainer.expected_value[0], shap_values_0, feature_names=X.columns, matplotlib=True)
+plt.show()
+
+# Visualize force plot for outcome 1
+shap.force_plot(explainer.expected_value[1], shap_values_1, feature_names=X.columns, matplotlib=True)
+plt.show()
+
+# Save the datasets and the model
+saved_data = {
+    'X_train_resampled': X_train_resampled,
+    'y_train_resampled': y_train_resampled,
+    'X_val_resampled': X_val_resampled,
+    'y_val_resampled': y_val_resampled,
+    'X_test': X_test,
+    'y_test': y_test,
+    'model': model
+}
+
+joblib.dump(saved_data, 'saved_model_data.joblib')
+
+# Calcola l'accuratezza del modello sul validation set
+accuracy = accuracy_score(y_val_resampled, y_pred)
+
+# Calcola la matrice di confusione
+conf_matrix = confusion_matrix(y_val_resampled, y_pred)
+
+# Stampa la matrice di confusione
+print(f"Matrice di Confusione:")
+print(conf_matrix)
+
+# Calcola il report di classificazione
+class_report = classification_report(y_val_resampled, y_pred, output_dict=True)
+
+# Stampa il report di classificazione approssimato
+print(f"Report di Classificazione:")
+print(f"Accuracy: {round(accuracy, 2)}")
+print("Precision_0: {:.2f}".format(class_report['0']['precision']))
+print("Precision_1: {:.2f}".format(class_report['1']['precision']))
+print("Recall_0: {:.2f}".format(class_report['0']['recall']))
+print("Recall_1: {:.2f}".format(class_report['1']['recall']))
+print("F1_Score_0: {:.2f}".format(class_report['0']['f1-score']))
+print("F1_Score_1: {:.2f}".format(class_report['1']['f1-score']))
+print("Support_0: {:.2f}".format(class_report['0']['support']))
+print("Support_1: {:.2f}".format(class_report['1']['support']))
+
+# Salva i risultati nel file CSV
+results_dict = {
+    'Model': ['MPL_UnderSampled'],
+    'Accuracy': [round(accuracy, 2)],
+    'Confusion_Matrix_TP': [conf_matrix[0, 0]],
+    'Confusion_Matrix_FP': [conf_matrix[0, 1]],
+    'Confusion_Matrix_FN': [conf_matrix[1, 0]],
+    'Confusion_Matrix_TN': [conf_matrix[1, 1]],
+    'Precision_0': [round(class_report['0']['precision'], 2)],
+    'Precision_1': [round(class_report['1']['precision'], 2)],
+    'Recall_0': [round(class_report['0']['recall'], 2)],
+    'Recall_1': [round(class_report['1']['recall'], 2)],
+    'F1_Score_0': [round(class_report['0']['f1-score'], 2)],
+    'F1_Score_1': [round(class_report['1']['f1-score'], 2)],
+    'Support_0': [round(class_report['0']['support'], 2)],
+    'Support_1': [round(class_report['1']['support'], 2)]
+}
+
+# Aggiungi i risultati al DataFrame
+results_df = pd.DataFrame(results_dict)
+
+# Se il file non esiste, aggiungi l'intestazione
+if not os.path.isfile('results.csv'):
+    results_df.to_csv('results.csv', index=False)
+else:
+    # Se il file esiste, aggiungi i risultati in append
+    results_df.to_csv('results.csv', mode='a', header=False, index=False)
+
+# Calcola la curva ROC e l'area sotto la curva
+y_scores = model.predict_proba(X_val_resampled)[:, 1]
+fpr, tpr, _ = roc_curve(y_val_resampled, y_scores)
+roc_auc = auc(fpr, tpr)
+
+# Visualizza la curva ROC
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic')
+plt.legend(loc='lower right')
+plt.show()
